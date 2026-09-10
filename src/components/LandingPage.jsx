@@ -1262,11 +1262,16 @@ const SecurityBadge = ({
   text,
 }) => (
   <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[10px] font-medium text-slate-600 sm:text-xs">
+
     <CheckCircle2
       size={13}
       className="shrink-0 text-emerald-500"
     />
+
     {text}
+
   </div>
 );
+
+
 export default LandingPage;
