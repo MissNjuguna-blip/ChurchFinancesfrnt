@@ -161,7 +161,7 @@ const LandingPage = () => {
             </Link>
 
             <Link
-              to="/register"
+              to="/signup"
               className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700 lg:px-5"
             >
               Get Started
