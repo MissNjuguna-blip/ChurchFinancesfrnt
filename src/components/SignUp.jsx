@@ -73,10 +73,6 @@ const SignUp = () => {
       return "Password is required.";
     }
 
-    if (formData.password.length < 8) {
-      return "Password must contain at least 8 characters.";
-    }
-
     if (formData.password !== formData.confirm_password) {
       return "Passwords do not match.";
     }
