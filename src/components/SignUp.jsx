@@ -109,7 +109,7 @@ const SignUp = () => {
       // =================================================
 
       const response = await api.post(
-        "core/auth/register/",
+        "core/register/",
         {
           first_name: formData.first_name.trim(),
           last_name: formData.last_name.trim(),
