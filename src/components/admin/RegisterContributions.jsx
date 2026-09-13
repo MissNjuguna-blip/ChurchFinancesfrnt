@@ -213,15 +213,7 @@ const RegisterContributions = () => {
   // VALIDATE FORM
   // =====================================================
 
-  const validateForm = () => {
-    if (!formData.first_name.trim()) {
-      return "Please enter the member's first name.";
-    }
-
-    if (!formData.last_name.trim()) {
-      return "Please enter the member's last name.";
-    }
-
+    const validateForm = () => {
     if (!formData.contribution_type) {
       return "Please select a contribution type.";
     }
@@ -278,156 +270,165 @@ const RegisterContributions = () => {
   // =====================================================
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+      e.preventDefault();
 
-    setError("");
-    setSuccess("");
+      setError("");
+      setSuccess("");
 
-    const validationError = validateForm();
+      const validationError = validateForm();
 
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
-    setSaving(true);
-
-    try {
-      /*
-       * STEP 1
-       * Create the member first.
-       */
-      const newMember = await createMember();
-
-      /*
-       * Django should return the created member
-       * including its ID.
-       */
-      const memberId = newMember?.id;
-
-      if (!memberId) {
-        throw new Error(
-          "Member was created but no member ID was returned."
-        );
+      if (validationError) {
+        setError(validationError);
+        return;
       }
 
-      /*
-       * Add the newly created member to our
-       * local members list immediately.
-       */
-      setMembers((prev) => [
-        newMember,
-        ...prev,
-      ]);
+      setSaving(true);
 
-      /*
-       * STEP 2
-       * Create the contribution using
-       * the new member ID.
-       */
-      const payload = {
-        member: Number(memberId),
+      try {
+        let memberId = null;
+        let newMember = null;
 
-        contribution_type: Number(
-          formData.contribution_type
-        ),
+        /*
+        * Create a member ONLY if at least one
+        * member field has been provided.
+        */
+        const hasMemberDetails =
+          formData.first_name.trim() ||
+          formData.last_name.trim();
 
-        amount: Number(
-          formData.amount
-        ).toFixed(2),
+        if (hasMemberDetails) {
+          newMember = await createMember();
 
-        contribution_date:
-          formData.contribution_date,
+          memberId = newMember?.id;
 
-        payment_method:
-          formData.payment_method,
-      };
+          if (!memberId) {
+            throw new Error(
+              "Member was created but no member ID was returned."
+            );
+          }
 
-      console.log(
-        "POSTING CONTRIBUTION:",
-        payload
-      );
+          setMembers((prev) => [
+            newMember,
+            ...prev,
+          ]);
+        }
 
-      const response = await api.post(
-        "finances/contributions/",
-        payload
-      );
+        /*
+        * Create contribution.
+        *
+        * If there is no member, member will be null.
+        */
+        const payload = {
+          member: memberId ? Number(memberId) : null,
 
-      const newContribution =
-        response.data;
+          contribution_type: Number(
+            formData.contribution_type
+          ),
 
-      setContributions((prev) => [
-        newContribution,
-        ...prev,
-      ]);
+          amount: Number(
+            formData.amount
+          ).toFixed(2),
 
-      setSuccess(
-        `Contribution for ${formData.first_name} ${formData.last_name} recorded successfully.`
-      );
+          contribution_date:
+            formData.contribution_date,
 
-      /*
-       * Reset form.
-       */
-      setFormData({
-        first_name: "",
-        last_name: "",
-        member: "",
-        contribution_type: "",
-        amount: "",
-        contribution_date:
-          new Date()
-            .toISOString()
-            .split("T")[0],
-        payment_method: "CASH",
-      });
+          payment_method:
+            formData.payment_method,
+        };
 
-      setShowForm(false);
-    } catch (err) {
-      console.error(
-        "Failed to save contribution:",
-        err
-      );
-
-      const backendError =
-        err.response?.data;
-
-      if (
-        backendError &&
-        typeof backendError === "object"
-      ) {
-        const errors = Object.values(
-          backendError
+        console.log(
+          "POSTING CONTRIBUTION:",
+          payload
         );
 
-        if (errors.length > 0) {
-          const firstError = errors[0];
+        const response = await api.post(
+          "finances/contributions/",
+          payload
+        );
 
-          if (Array.isArray(firstError)) {
-            setError(firstError[0]);
-          } else if (
-            typeof firstError === "object"
-          ) {
-            setError(
-              JSON.stringify(firstError)
-            );
+        const newContribution =
+          response.data;
+
+        setContributions((prev) => [
+          newContribution,
+          ...prev,
+        ]);
+
+        const memberDescription =
+          hasMemberDetails
+            ? ` for ${formData.first_name} ${formData.last_name}`.trim()
+            : "";
+
+        setSuccess(
+          `Contribution${memberDescription} recorded successfully.`
+        );
+
+        /*
+        * Reset form.
+        */
+        setFormData({
+          first_name: "",
+          last_name: "",
+          member: "",
+          contribution_type: "",
+          amount: "",
+          contribution_date:
+            new Date()
+              .toISOString()
+              .split("T")[0],
+          payment_method: "CASH",
+        });
+
+        setShowForm(false);
+
+      } catch (err) {
+        console.error(
+          "Failed to save contribution:",
+          err
+        );
+
+        const backendError =
+          err.response?.data;
+
+        if (
+          backendError &&
+          typeof backendError === "object"
+        ) {
+          const errors = Object.values(
+            backendError
+          );
+
+          if (errors.length > 0) {
+            const firstError = errors[0];
+
+            if (Array.isArray(firstError)) {
+              setError(firstError[0]);
+            } else if (
+              typeof firstError === "object"
+            ) {
+              setError(
+                JSON.stringify(firstError)
+              );
+            } else {
+              setError(String(firstError));
+            }
           } else {
-            setError(String(firstError));
+            setError(
+              "Unable to save contribution."
+            );
           }
         } else {
           setError(
-            "Unable to save contribution."
+            err.message ||
+              "Unable to save contribution. Please try again."
           );
         }
-      } else {
-        setError(
-          err.message ||
-            "Unable to save contribution. Please try again."
-        );
+
+      } finally {
+        setSaving(false);
       }
-    } finally {
-      setSaving(false);
-    }
-  };
+    };
+
 
   // =====================================================
   // DELETE
@@ -774,12 +775,14 @@ const RegisterContributions = () => {
                       <div>
 
                         <label
-                          htmlFor="first_name"
-                          className="mb-2 block text-sm font-medium text-slate-700"
-                        >
-                          First Name
-                        </label>
-
+                        htmlFor="first_name"
+                        className="mb-2 block text-sm font-medium text-slate-700"
+                      >
+                        First Name
+                        <span className="ml-1 text-xs font-normal text-slate-400">
+                          (Optional)
+                        </span>
+                      </label>
                         <input
                           id="first_name"
                           name="first_name"
@@ -797,12 +800,14 @@ const RegisterContributions = () => {
                       <div>
 
                         <label
-                          htmlFor="last_name"
-                          className="mb-2 block text-sm font-medium text-slate-700"
-                        >
-                          Last Name
-                        </label>
-
+                        htmlFor="last_name"
+                        className="mb-2 block text-sm font-medium text-slate-700"
+                      >
+                        Last Name
+                        <span className="ml-1 text-xs font-normal text-slate-400">
+                          (Optional)
+                        </span>
+                      </label>
                         <input
                           id="last_name"
                           name="last_name"
@@ -819,15 +824,13 @@ const RegisterContributions = () => {
                     </div>
 
                     <div className="mt-3 flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-700">
-                      <CheckCircle2 size={16} />
+                    <CheckCircle2 size={16} />
 
-                      <span>
-                        A new member record will be created automatically when you save this contribution.
-                      </span>
-                    </div>
-
+                    <span>
+                      Member details are optional. Leave them blank to record a contribution without an associated member.
+                    </span>
                   </div>
-
+                  </div>
                   {/* CONTRIBUTION TYPE */}
                   <div>
 
