@@ -399,7 +399,7 @@ const AdminDashboard = () => {
         subtitle="Registered members"
         icon={Users}
         iconClass="bg-emerald-100 text-emerald-600"
-        path="/admin-dashboard/register-contributions"
+        path="/admin-dashboard/view-members"
     />
 
     <DashboardStatCard

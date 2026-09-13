@@ -18,6 +18,7 @@ import RegisterExpenses from './components/admin/RegisterExpenses'
 import ViewExpenses from './components/admin/ViewExpenses'
 import ViewAuditLogs from './components/admin/ViewAuditLogs'
 import LandingPage from './components/LandingPage'
+import ViewMembers from './components/admin/ViewMembers'
 
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
             <Route path='register-expenses' element={<RegisterExpenses/>}/>
             <Route path='view-expenses' element={<ViewExpenses/>}/>
             <Route path='view-auditlogs' element={<ViewAuditLogs/>}/>
+            <Route path='view-members' element={<ViewMembers/>}/>
           </Route>
             <Route path='/' element={<LandingPage/>}/>
             <Route path='/login' element={<LogIn />} /> 
